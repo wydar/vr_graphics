@@ -23,15 +23,15 @@
 			var clock = new THREE.Clock();
 
 			var container;
-			var camera, scene, raycaster, renderer;
+			var camera, scene, raycaster, raycaster2, renderer;
 
 			var room;
 			var isMouseDown = false;
 
-			var INTERSECTED;
+			var INTERSECTED, INTERSECTED2;
 			var crosshair;
 
-			var cube, cube2, grupo, user, grupoGordo;
+			var cube, cube2, grupo, user, grupo2, box;
 
 			init();
 			animate();
@@ -44,7 +44,7 @@
 				scene = new THREE.Scene();
 				scene.background = new THREE.Color( 0x505050 );
 
-				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 10 );
+				camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 300 );
 				scene.add( camera );
 
 				crosshair = new THREE.Mesh(
@@ -59,7 +59,7 @@
 				camera.add( crosshair );
 
 				room = new THREE.LineSegments(
-					new THREE.BoxLineGeometry( 18, 18, 18, 10, 10, 10 ),
+					new THREE.BoxLineGeometry( 20, 20, 20, 10, 10, 10 ),
 					new THREE.LineBasicMaterial( { color: 0x808080 } )
 				);
 				room.position.y = 3;
@@ -90,35 +90,42 @@
 				grupo.add(cube2);
 				scene.add(grupo);
 
-				//Incluyo las flechas para mover las camaras
-				var rowGroup = new THREE.Object3D();
+				
 
-				var geometryRows = new THREE.CylinderGeometry(0, 2, 2, 4, 1, false);
+				//Incluyo las flechas para mover las camaras
+				grupo2 = new THREE.Object3D();
+
+				var geometryRows = new THREE.CylinderGeometry(0, 1, 1, 3, 1, false);
 				var materialRows = new THREE.MeshBasicMaterial({color: '#2ace4d'});
 				var row = new THREE.Mesh(geometryRows, materialRows);
-				row.position.set(0,5,-11);
+				row.position.set(0,4,-11);
 				row.name = 'tr';
-				rowGroup.add(row);
+				grupo2.add(row);
 
 				var row2 = new THREE.Mesh(geometryRows, materialRows); 
-				row2.position.set(-4,1,-11);
+				row2.position.set(-3,1,-11);
 				row2.rotation.z = Math.PI/2;
 				row2.name= 'lr';
-				rowGroup.add(row2);
+				grupo2.add(row2);
 
 				var row3 = new THREE.Mesh(geometryRows, materialRows); 
-				row3.position.set(4,1,-11);
+				row3.position.set(3,1,-11);
 				row3.rotation.z = -Math.PI/2;
 				row3.name= 'rr';
-				rowGroup.add(row3);
+				grupo2.add(row3);
 
 				var row4 = new THREE.Mesh(geometryRows, materialRows);
-				row4.position.set(0,-3,-11);
+				row4.position.set(0,-2,-11);
 				row4.rotation.z = Math.PI;
 				row4.name = 'br';
-				rowGroup.add(row4);
+				grupo2.add(row4);
 
-				scene.add(rowGroup);
+				var geometryBox = new THREE.BoxGeometry(1,1,0);
+				var materialBox = new THREE.MeshBasicMaterial({color: '#FF5733'});
+				box = new THREE.Mesh(geometryBox,materialBox);
+				box.position.set(-5,5,-10);
+				box.name = 'box';
+				grupo2.add(box);
 
 				// Usuario añadido para poder mover la cámara
 				user = new THREE.Group();
@@ -126,14 +133,12 @@
 				user.position.set(0,0,0);
 				user.add( camera );
 				scene.add(user);
+				console.log(user);
 
-				grupoGordo = new THREE.Object3D();
-				//grupoGordo.add(grupo);
-				//grupoGordo.add(rowGroup);
-				//console.log(grupoGordo.children[0]);
-
+				scene.add(grupo2);
 
 				raycaster = new THREE.Raycaster();
+				raycaster2 = new THREE.Raycaster();
 
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
@@ -195,6 +200,9 @@
 				// find intersections
 
 				raycaster.setFromCamera( { x: 0, y: 0 }, camera );
+				raycaster2.setFromCamera( { x: 0, y: 0 }, camera );
+
+
 
 				var intersects = raycaster.intersectObjects( grupo.children );
 
@@ -209,6 +217,15 @@
 
 				}
 
+				var intersects2 = raycaster2.intersectObjects( grupo2.children );
+				if ( intersects2.length > 0 ) {
+					if ( INTERSECTED2 != intersects2[ 0 ].object ) {
+						INTERSECTED2 = intersects2[ 0 ].object;
+					}
+				} else {
+					INTERSECTED2 = undefined;
+				}
+
 				if(typeof INTERSECTED !== 'undefined'){
 					if( INTERSECTED.name == 'cubo'){
 						cube.rotation.y -= 0.1; 
@@ -217,14 +234,46 @@
 					if(INTERSECTED.name == 'cubo2'){
 						cube2.rotation.y -= 0.1; 
 					}
+				}
 
-					if(INTERSECTED.name == 'tr'){
-						user.rotation.y += 0.1;
-						console.log('gg');
+				if(typeof INTERSECTED2 !== 'undefined'){
+					if(INTERSECTED2.name == 'rr'){
+						if(user.position.x < 6.9){
+							user.position.x += 0.05;
+							grupo2.position.x +=0.05;
+						}
+					}
+
+					if(INTERSECTED2.name == 'lr'){
+						if(user.position.x > -6.9){
+							user.position.x -= 0.05;
+							grupo2.position.x -=0.05;
+						}
+						
+					}
+
+					if(INTERSECTED2.name == 'tr'){
+						if(user.position.y < 8.9){
+							user.position.y += 0.05;
+							grupo2.position.y +=0.05;
+						}	
+					}
+
+					if(INTERSECTED2.name == 'br'){
+						if(user.position.y > -4.7){
+							user.position.y -= 0.05;
+							grupo2.position.y -=0.05;
+						}
+					}
+					
+					if(INTERSECTED2.name == 'box'){
+						user.position.set(0,0,0);
+						user.lookAt(new THREE.Vector3(0,0,0));
+						grupo2.position.set(0,0,0);
 					}
 				}
 
-				//user.rotation.y +=0.1;
+
 				grupo.rotation.y += 0.01;
 				renderer.render( scene, camera ); 
 
